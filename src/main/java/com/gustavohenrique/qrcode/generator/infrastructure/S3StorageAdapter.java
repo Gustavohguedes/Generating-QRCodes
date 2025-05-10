@@ -1,12 +1,16 @@
 package com.gustavohenrique.qrcode.generator.infrastructure;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.gustavohenrique.qrcode.generator.ports.StoragePorts;
 
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+@Component
 public class S3StorageAdapter implements StoragePorts {
 
     private final S3Client s3Client;
@@ -27,8 +31,15 @@ public class S3StorageAdapter implements StoragePorts {
 
     @Override
     public String uploadFile(byte[] fileContent, String fileName, String contentType) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'uploadFile'");
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileName)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileContent));
+        return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileName);
+
     }
 
 }
